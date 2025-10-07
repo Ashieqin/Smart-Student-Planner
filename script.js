@@ -849,36 +849,25 @@ function attachTaskActionListeners(container) {
 // Update home page
 function updateHomePage() {
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    today.setHours(0, 0, 0, 0); 
     
-    // TODAY'S TASKS: Tugas yang bertarikh HARI INI dan belum selesai
-    const todayTasks = tasks.filter(task => task.date === todayStr && !task.completed);
+    // TODAY TASKS 
+    const todayTasks = tasks.filter(task => {
+        const taskDate = new Date(task.date);
+        taskDate.setHours(0, 0, 0, 0); 
+        return taskDate.getTime() === today.getTime() && !task.completed;
+    });
     
     // Change from 7 days to 30 days for upcoming tasks
-    const nextMonth = new Date();
-    nextMonth.setDate(nextMonth.getDate() + 30);
-    
-    // UPCOMING TASKS: Tugas yang bertarikh SELEPAS HARI INI dan dalam 30 hari akan datang, serta belum selesai
+    const next30Days = new Date(today); 
+    next30Days.setDate(today.getDate() + 30); 
+
     const upcomingTasks = tasks.filter(task => {
         const taskDate = new Date(task.date);
+        taskDate.setHours(0, 0, 0, 0); 
         
-        // Tetapkan masa today ke 00:00:00 untuk perbandingan yang tepat (hanya tarikh)
-        const dateOnlyToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         
-        // Tukar taskDate kepada objek tarikh untuk perbandingan mudah
-        const taskDateOnly = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
-        
-        // 1. Mesti selepas hari ini (penting untuk tidak termasuk todayTasks)
-        const isAfterToday = taskDateOnly.getTime() > dateOnlyToday.getTime();
-        
-        // 2. Mesti dalam lingkungan 30 hari dari sekarang
-        const isWithinNext30Days = taskDate <= nextMonth;
-        
-        // 3. Mesti belum selesai
-        const isNotCompleted = !task.completed;
-        
-        // Gabungkan semua penapisan
-        return isAfterToday && isWithinNext30Days && isNotCompleted;
+        return taskDate.getTime() > today.getTime() && taskDate.getTime() <= next30Days.getTime() && !task.completed;
     });
     
     // Sort tasks by priority, date, and time
@@ -915,17 +904,13 @@ function updateHomePage() {
     if (todayTasks.length === 0) {
         todayTasksContainer.innerHTML = '<p>No tasks for today!</p>';
     } else {
-        // PERHATIAN: Di sini anda menggunakan sortTasks() yang mengutamakan Priority. 
-        // Jika anda ingin tugas hari ini diutamakan mengikut MASA (seperti yang biasa untuk tugas harian), anda mungkin perlu menukar peraturan di sini.
-        // Buat masa ini, saya kekalkan sortTasks asal anda.
         sortTasks(todayTasks).forEach(task => {
             const taskElement = document.createElement('div');
-            taskElement.className = `task-item task-${task.type} ${task.completed ? 'completed' : ''}`; // Menambah task-type class
+            taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
             
           taskElement.innerHTML = `
                 <div class="task-info">
-                    <span class="type-badge badge-${task.type}">${task.type.toUpperCase().substring(0, 3)}</span>
-                    <h4 class="task-name ${task.completed ? 'strikethrough' : ''}"><span class="priority-indicator priority-${task.priority}"></span>${task.name}</h4>
+                    <h4><span class="priority-indicator priority-${task.priority}"></span>${task.name}</h4>
                     <p>${task.time || 'All day'} - ${task.type.charAt(0).toUpperCase() + task.type.slice(1)}</p>
                     ${task.notes ? `<p class="task-notes">Notes: ${task.notes}</p>` : ''}
                 </div>
@@ -948,15 +933,14 @@ function updateHomePage() {
     } else {
         sortTasks(upcomingTasks).forEach(task => {
             const taskElement = document.createElement('div');
-            taskElement.className = `task-item task-${task.type} ${task.completed ? 'completed' : ''}`; // Menambah task-type class
+            taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
             
             const taskDate = new Date(task.date);
             const formattedDate = taskDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             
            taskElement.innerHTML = `
                 <div class="task-info">
-                    <span class="type-badge badge-${task.type}">${task.type.toUpperCase().substring(0, 3)}</span>
-                    <h4 class="task-name"><span class="priority-indicator priority-${task.priority}"></span>${task.name}</h4>
+                    <h4><span class="priority-indicator priority-${task.priority}"></span>${task.name}</h4>
                     <p>${task.time || 'All day'} - ${task.type.charAt(0).toUpperCase() + task.type.slice(1)}</p>
                     ${task.notes ? `<p class="task-notes">Notes: ${task.notes}</p>` : ''}
                     <div class="task-date">${formattedDate}</div>
@@ -972,8 +956,72 @@ function updateHomePage() {
         });
     }
     
-    // Pastikan `attachTaskActionListeners` dipanggil pada keseluruhan kontena home page
     attachTaskActionListeners(document.getElementById('home'));
+}
+
+// Update progress page
+function updateProgress() {
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => task.completed).length;
+    const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    
+    document.getElementById('progress-percent').textContent = `${progressPercent}%`;
+    
+    const circle = document.querySelector('.circle');
+    const radius = circle.r.baseVal.value;
+    const circumference = 2 * Math.PI * radius;
+    
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+    
+    const progressTasksContainer = document.getElementById('progress-tasks');
+    progressTasksContainer.innerHTML = '';
+    
+    if (tasks.length === 0) {
+        progressTasksContainer.innerHTML = '<p>No tasks yet!</p>';
+    } else {
+        // Use the same sorting function for progress page
+        const sortTasks = (taskList) => {
+            return taskList.sort((a, b) => {
+                const priorityOrder = { high: 3, medium: 2, low: 1 };
+                const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+                if (priorityDiff !== 0) return priorityDiff;
+                
+                const dateDiff = new Date(a.date) - new Date(b.date);
+                if (dateDiff !== 0) return dateDiff;
+                
+                const timeA = a.time || "00:00";
+                const timeB = b.time || "00:00";
+                return timeA.localeCompare(timeB);
+            });
+        };
+        
+        sortTasks(tasks).forEach(task => {
+            const taskElement = document.createElement('div');
+            taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
+            
+            const taskDate = new Date(task.date);
+            const formattedDate = taskDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            
+           taskElement.innerHTML = `
+                <div class="task-info">
+                    <h4><span class="priority-indicator priority-${task.priority}"></span>${task.name}</h4>
+                    <p>${task.time || 'All day'} - ${task.type.charAt(0).toUpperCase() + task.type.slice(1)}</p>
+                    ${task.notes ? `<p class="task-notes">Notes: ${task.notes}</p>` : ''}
+                    <div class="task-date">${formattedDate}</div>
+                </div>
+                <div class="task-actions">
+                    <button class="edit-task-btn" data-id="${task.id}"><i class="fas fa-edit"></i></button>
+                    <button class="delete-task-btn" data-id="${task.id}"><i class="fas fa-trash-alt"></i></button>
+                    <input type="checkbox" class="complete-checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}">
+                </div>
+            `;
+            
+            progressTasksContainer.appendChild(taskElement);
+        });
+        
+        attachTaskActionListeners(document.getElementById('progress'));
+    }
 }
 
 // Logout function
@@ -1067,5 +1115,4 @@ if (musicToggle && audio) {
 }
 
 // Clear the flag after checking it (important for next page load)
-
-localStorage.removeItem('musicStarted'); 
+localStorage.removeItem('musicStarted');
