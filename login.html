@@ -1,0 +1,520 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase App (core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <!-- Firebase Firestore (if you need database) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #4cc9f0;
+            --error: #f94144;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--dark);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary);
+        }
+
+        .btn:disabled {
+            background-color: var(--gray);
+            cursor: not-allowed;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--gray);
+        }
+
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .form-toggle {
+            display: none;
+        }
+
+        #register-form {
+            display: none;
+        }
+
+        #toggle-register:checked ~ #register-form {
+            display: block;
+        }
+
+        #toggle-register:checked ~ #login-form {
+            display: none;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: rgba(76, 201, 240, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .alert-error {
+            background-color: rgba(249, 65, 68, 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+        <p>SMART STUDENT PLANNER</p>
+        </div>
+
+        <input type="checkbox" id="toggle-register" class="form-toggle">
+        
+        <!-- Login Form -->
+        <div id="login-form" class="form-container">
+            <div id="login-alert" class="alert"></div>
+            
+            <h2 class="form-title">LOGIN</h2>
+            
+            <div class="form-group">
+                <label for="login-email">Email</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="login-email" class="form-control" placeholder="Enter your email">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="login-password" class="form-control" placeholder="Enter your password">
+                    <span class="password-toggle" id="login-password-toggle">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+            
+            <button id="login-btn" class="btn">LOGIN</button>
+            
+            <div class="form-footer">
+                <p>Don't have an account? <a href="#" onclick="toggleForm()">Sign up here</a></p>
+            </div>
+        </div>
+        
+        <!-- Register Form -->
+        <div id="register-form" class="form-container">
+            <div id="register-alert" class="alert"></div>
+            
+            <h2 class="form-title">REGISTER</h2>
+            <p style="text-align: center; margin-bottom: 20px; color: var(--gray);">Please Register to Login</p>
+            
+            <div class="form-group">
+                <label for="register-email">Email</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="register-email" class="form-control" placeholder="Enter your email">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="register-password" class="form-control" placeholder="Create a password (min. 6 characters)">
+                    <span class="password-toggle" id="register-password-toggle">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="confirm-password" class="form-control" placeholder="Confirm your password">
+                    <span class="password-toggle" id="confirm-password-toggle">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+            
+            <button id="register-btn" class="btn">SIGN UP</button>
+            
+            <div class="form-footer">
+                <p>Already have an account? <a href="#" onclick="toggleForm()">Login here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBz5V99SiEojvhGvhM4hUPScoHCZB8x3jY",
+            authDomain: "studystudentplanner.firebaseapp.com",
+            projectId: "studystudentplanner",
+            storageBucket: "studystudentplanner.firebasestorage.app",
+            messagingSenderId: "1062101526895",
+            appId: "1:1062101526895:web:fc529a3338ea65588269a",
+            measurementId: "G-CUPTL5CD51"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        function toggleForm() {
+            const toggleCheckbox = document.getElementById('toggle-register');
+            toggleCheckbox.checked = !toggleCheckbox.checked;
+            
+            // Clear alerts and form fields when toggling
+            document.getElementById('login-alert').style.display = 'none';
+            document.getElementById('register-alert').style.display = 'none';
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('register-email').value = '';
+            document.getElementById('register-password').value = '';
+            document.getElementById('confirm-password').value = '';
+        }
+
+        // Password visibility toggle
+        function setupPasswordToggle(passwordId, toggleId) {
+            const passwordInput = document.getElementById(passwordId);
+            const toggleIcon = document.getElementById(toggleId);
+            
+            toggleIcon.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                } else {
+                    passwordInput.type = 'password';
+                    toggleIcon.innerHTML = '<i class="fas fa-eye"></i>';
+                }
+            });
+        }
+
+        // Show alert message
+        function showAlert(elementId, message, type) {
+            const alertElement = document.getElementById(elementId);
+            alertElement.textContent = message;
+            alertElement.className = `alert alert-${type}`;
+            alertElement.style.display = 'block';
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // Setup password toggles
+        document.addEventListener('DOMContentLoaded', function() {
+            setupPasswordToggle('login-password', 'login-password-toggle');
+            setupPasswordToggle('register-password', 'register-password-toggle');
+            setupPasswordToggle('confirm-password', 'confirm-password-toggle');
+            
+            // Login form submission
+            document.getElementById('login-btn').addEventListener('click', function() {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (!email || !password) {
+                    showAlert('login-alert', 'Please fill in all fields', 'error');
+                    return;
+                }
+                
+                // Show loading state
+                const loginBtn = document.getElementById('login-btn');
+                const originalText = loginBtn.textContent;
+                loginBtn.innerHTML = '<span class="loading"></span> Logging in...';
+                loginBtn.disabled = true;
+                
+                // Sign in with Firebase
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // Signed in 
+                        const user = userCredential.user;
+                        showAlert('login-alert', 'Login successful! Redirecting...', 'success');
+                        
+                        // Redirect to index.html after successful login
+                        setTimeout(() => {
+			//START CODE FOR STEP 2 (SET MUSIC FLAG ON SUCCESS)
+                            localStorage.setItem('musicStarted', 'true');
+
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    })
+                    .catch((error) => {
+                        // Handle errors
+                        let errorMessage = 'Login failed. Please try again.';
+                        
+                        switch(error.code) {
+                            case 'auth/user-not-found':
+                                errorMessage = 'No account found with this email.';
+                                break;
+                            case 'auth/wrong-password':
+                                errorMessage = 'Incorrect password.';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = 'Invalid email address.';
+                                break;
+                            default:
+                                errorMessage = error.message;
+                        }
+                        
+                        showAlert('login-alert', errorMessage, 'error');
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        loginBtn.textContent = originalText;
+                        loginBtn.disabled = false;
+                    });
+            });
+            
+            // Register form submission
+            document.getElementById('register-btn').addEventListener('click', function() {
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                if (!email || !password || !confirmPassword) {
+                    showAlert('register-alert', 'Please fill in all fields', 'error');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    showAlert('register-alert', 'Passwords do not match', 'error');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    showAlert('register-alert', 'Password must be at least 6 characters', 'error');
+                    return;
+                }
+                
+                // Show loading state
+                const registerBtn = document.getElementById('register-btn');
+                const originalText = registerBtn.textContent;
+                registerBtn.innerHTML = '<span class="loading"></span> Creating account...';
+                registerBtn.disabled = true;
+                
+                // Create user with Firebase
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // Signed up 
+                        const user = userCredential.user;
+                        
+                        // Save user data to Firestore
+                        return db.collection('users').doc(user.uid).set({
+                            email: user.email,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    })
+                    .then(() => {
+                        // Sign out the user after registration
+                        return auth.signOut();
+                    })
+                    .then(() => {
+                        showAlert('register-alert', 'Registration successful! You can now login.', 'success');
+                        
+                        // Clear the form
+                        document.getElementById('register-email').value = '';
+                        document.getElementById('register-password').value = '';
+                        document.getElementById('confirm-password').value = '';
+                        
+                        // Switch to login form after a delay
+                        setTimeout(() => {
+                            toggleForm();
+                        }, 2000);
+                    })
+                    .catch((error) => {
+                        // Handle errors
+                        let errorMessage = 'Registration failed. Please try again.';
+                        
+                        switch(error.code) {
+                            case 'auth/email-already-in-use':
+                                errorMessage = 'This email is already registered.';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = 'Invalid email address.';
+                                break;
+                            case 'auth/weak-password':
+                                errorMessage = 'Password is too weak.';
+                                break;
+                            default:
+                                errorMessage = error.message;
+                        }
+                        
+                        showAlert('register-alert', errorMessage, 'error');
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        registerBtn.textContent = originalText;
+                        registerBtn.disabled = false;
+                    });
+            });
+
+            // Check if user is already logged in
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+	                    
+		localStorage.setItem('musicStarted', 'true');
+		window.location.href = 'index.html';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

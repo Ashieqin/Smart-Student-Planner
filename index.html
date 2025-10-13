@@ -1,0 +1,367 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Student Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+     <video autoplay loop muted id="background-video">
+        <source src="vid background.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+<audio id="bg-music" src="lofihiphop.mp3" loop style="display: none;"></audio>
+<audio id="bg-music-jazz" src="relaxjazz.mp3" loop style="display: none;">
+</audio>
+<audio id="bg-music-focus" src="alphawaves.mp3" loop style="display: none;"></audio>
+
+    <header>
+        <div class="container header-content">
+        <div class="logo">
+            <i class="fas fa-graduation-cap"></i>
+            Smart Student Planner
+        </div>
+
+        <div class="notification-area">
+            <div id="notification-bell" class="icon-button" role="button" aria-label="Notifications" aria-expanded="false">
+                <i class="fas fa-bell"></i>
+                <span id="notification-badge" class="badge hidden">0</span>
+            </div>
+            
+            
+           <div class="music-selector">
+        <button id="music-toggle" class="icon-button">
+            <i class="fas fa-music"></i>
+            <span id="current-track">Lofi</span>
+        </button>
+        <div id="music-dropdown" class="dropdown-content hidden">
+            <div class="dropdown-header">
+                <h4>Select Music</h4>
+            </div>
+            <ul id="music-list">
+                <li data-track="0" class="music-option active">🎵 Lofi Hip Hop</li>
+                <li data-track="1" class="music-option">🎷 Relax Jazz</li>
+                <li data-track="2" class="music-option">🧠 Alpha Waves</li>
+            </ul>
+        </div>
+    </div>
+
+            
+            
+            
+            <div id="notification-dropdown" class="dropdown-content hidden">
+                <div class="dropdown-header">
+                    <h4>Notifications</h4>
+                    <button id="clear-notifications-btn" class="clear-btn">Clear All</button>
+                </div>
+                <ul id="notification-list">
+                    <li class="empty-message">No new notifications.</li>
+                </ul>
+            </div>
+        </div>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container nav-container">
+            <a href="#" class="nav-item active" data-page="home">HOME</a>
+            <a href="#" class="nav-item" data-page="calendar">CALENDAR</a>
+            <a href="#" class="nav-item" data-page="progress">PROGRESS</a>
+            <a href="#" class="nav-item" data-page="add-task">ADD TASK</a>
+            <a href="#" class="nav-item" data-page="profile">PROFILE</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <div id="home" class="page active">
+                <div class="welcome-section">
+                    <h1>Good Morning, Student!</h1>
+                    <p>Here's your study plan for today. You've got this!</p>
+                </div>
+
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Task Due</h3>
+                        <div class="count" id="due-count">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Upcoming Exams</h3>
+                        <div class="count" id="exam-count">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completed Tasks</h3>
+                        <div class="count" id="completed-count">0</div>
+                    </div>
+                </div>
+
+                <div class="task-list">
+                    <h2><i class="fas fa-calendar-day"></i> Today's Tasks</h2>
+                    <div id="today-tasks">
+                        </div>
+                </div>
+
+                <div class="task-list">
+                    <h2><i class="fas fa-calendar-week"></i> Upcoming Tasks (Next 30 Days)</h2>
+                    <div id="upcoming-tasks">
+                        </div>
+                </div>
+            </div>
+
+            <div id="calendar" class="page">
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                            <h2 id="calendar-month">September 2023</h2>
+                            <button id="next-month"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-grid" id="calendar-days">
+                        </div>
+                </div>
+            </div>
+
+            <div id="progress" class="page">
+                <div class="progress-container">
+                    <h2>PROGRESS</h2>
+                    <div class="progress-circle">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="circle-bg" cx="50" cy="50" r="45" />
+                            <circle class="circle" cx="50" cy="50" r="45" stroke-dasharray="283" />
+                        </svg>
+                        <div class="progress-text" id="progress-percent">0%</div>
+                    </div>
+                    <p style="font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem;">is Complete!</p>
+
+                    <div class="task-progress-list" id="progress-tasks">
+                        </div>
+                </div>
+            </div>
+
+            <div id="add-task" class="page">
+                <div class="form-container">
+                    <h2 style="text-align: center; margin-bottom: 2rem;">ADD TASK</h2>
+
+                    <div class="form-group">
+                        <label for="taskName">Task Name</label>
+                        <input type="text" id="taskName" class="form-control" placeholder="Enter task name">
+                    </div>
+                    
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="taskDate">Date</label>
+                            <input type="date" id="taskDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskTime">Time</label>
+                            <input type="time" id="taskTime" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="priorityLow" name="taskPriority" value="low">
+                                <label for="priorityLow">LOW</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="priorityMedium" name="taskPriority" value="medium" checked>
+                                <label for="priorityMedium">MEDIUM</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="priorityHigh" name="taskPriority" value="high">
+                                <label for="priorityHigh">HIGH</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Type</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="typeAssignment" name="taskType" value="assignment" checked>
+                                <label for="typeAssignment">Assignment</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="typeExam" name="taskType" value="exam">
+                                <label for="typeExam">Exam</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskNotes">NOTES</label>
+                        <textarea id="taskNotes" class="form-control" rows="4" placeholder="Add notes..."></textarea>
+                    </div>
+
+                    <button id="save-task" class="btn btn-block">SAVE</button>
+                </div>
+            </div>
+
+            <div id="profile" class="page">
+                <div class="profile-container">
+                    <h2 style="text-align: center; margin-bottom: 2rem; color: white;">PROFILE</h2>
+
+                    
+                    <div class="profile-card">
+                        <div class="profile-header">
+                            <div class="profile-image-container">
+                                <img id="profile-pic" src="profile.png" alt="Profile Picture">
+                                <label for="profile-upload" class="profile-upload-btn">
+                                    <i class="fas fa-camera"></i>
+                                    <input type="file" id="profile-upload" accept="image/*" style="display: none;">
+                                </label>
+                            </div>
+                            <h2 id="profile-name">Student Name</h2>
+                            <p id="profile-title">Student</p>
+                            <p id="profile-email-display"><i class="fas fa-envelope"></i> user@example.com</p>
+                        </div>
+                        
+                        <div class="profile-details">
+                            <h3>Personal Information</h3>
+                            <div class="form-group">
+                                <label for="profile-fullname">Full Name</label>
+                                <input type="text" id="profile-fullname" class="form-control" placeholder="Enter your full name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="profile-email">Email (read-only)</label>
+                                <input type="email" id="profile-email" class="form-control readonly-field" placeholder="Your email" readonly>
+                            </div>
+                            
+                            <button id="save-profile" class="btn btn-block">SAVE PROFILE</button>
+                            <button id="edit-profile" class="btn btn-block">EDIT PROFILE</button>
+                            
+                            <div class="logout-section">
+                                <button id="logout-btn" class="btn btn-block btn-logout">
+                                    <i class="fas fa-sign-out-alt"></i> LOGOUT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Smart Student Planner. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div id="daily-tasks-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modal-date-title"></h2>
+            <div id="modal-tasks-list" class="task-list">
+                </div>
+        </div>
+    </div>
+    
+    <div id="edit-task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn edit-close-btn">&times;</span>
+            <h2>Edit Task</h2>
+            <form id="edit-task-form">
+                <input type="hidden" id="edit-task-id">
+                
+                <div class="form-group">
+                    <label for="editTaskName">Task Name</label>
+                    <input type="text" id="editTaskName" class="form-control" required>
+                </div>
+                
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label for="editTaskDate">Date</label>
+                        <input type="date" id="editTaskDate" class="form-control" required>
+                    </div>
+    
+                    <div class="form-group">
+                        <label for="editTaskTime">Time</label>
+                        <input type="time" id="editTaskTime" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="editPriorityLow" name="editTaskPriority" value="low">
+                            <label for="editPriorityLow">LOW</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="editPriorityMedium" name="editTaskPriority" value="medium">
+                            <label for="editPriorityMedium">MEDIUM</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="editPriorityHigh" name="editTaskPriority" value="high">
+                            <label for="editPriorityHigh">HIGH</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Type</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="editTypeAssignment" name="editTaskType" value="assignment">
+                            <label for="editTypeAssignment">Assignment</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="editTypeExam" name="editTaskType" value="exam">
+                            <label for="editTypeExam">Exam</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editTaskNotes">NOTES</label>
+                    <textarea id="editTaskNotes" class="form-control" rows="3" placeholder="Add notes..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-block" id="save-edit-task">SAVE CHANGES</button>
+            </form>
+        </div>
+    </div>
+    
+       <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<!-- Chatbot Floating Bubble -->
+<div id="chatbot-bubble">💬</div>
+
+<!-- Chatbot Window -->
+<div id="chatbot">
+    <div id="chatbot-header">
+        Planner Assistant
+        <span id="chatbot-close">×</span>
+    </div>
+
+    <div id="chatbot-messages"></div>
+    <div id="chatbot-options" class="chat-options"></div>
+
+    <div id="chatbot-input-area">
+        <textarea id="chatbot-input" placeholder="Type your message..." rows="2" disabled></textarea>
+        <button id="chatbot-send" disabled>Send</button>
+    </div>
+</div>
+
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  (function(){
+    emailjs.init("aujD6oecUSj7WdzCE"); 
+  })();
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>

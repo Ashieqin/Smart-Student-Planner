@@ -1,0 +1,22 @@
+# Hide secret & backend files
+.env
+serviceAccountKey.json
+firebase-adminsdk.json
+*.pem
+
+# Hide Firebase Admin credentials if exist
+studystudentplanner-firebase-adminsdk-fbsvc-da9299640f.json
+
+# Node or temporary files
+node_modules/
+*.log
+
+# Windows system files
+Thumbs.db
+desktop.ini
+
+# Sensitive files
+.env
+*.json
+studystudentplanner-firebase-adminsdk-fbsvc-da9299640f.json
+
